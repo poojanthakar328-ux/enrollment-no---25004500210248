@@ -1,0 +1,52 @@
+DECLARE
+   
+   CURSOR c_db_books IS
+      SELECT book_id, title, category, stock
+      FROM book
+      WHERE category = 'Database'
+      FOR UPDATE OF stock;
+
+   v_old_stock book.stock%TYPE;
+   v_new_stock book.stock%TYPE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('BOOK ID', 10) || 
+      RPAD('TITLE', 30) || 
+      RPAD('OLD STOCK', 12) || 
+      'NEW STOCK'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+
+      FOR rec IN c_db_books LOOP
+      v_old_stock := rec.stock;
+      v_new_stock := v_old_stock + 10;
+
+      
+      UPDATE book
+      SET stock = v_new_stock
+      WHERE CURRENT OF c_db_books;
+
+      
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec.book_id), 10) ||
+         RPAD(rec.title, 30) ||
+         RPAD(TO_CHAR(v_old_stock), 12) ||
+         TO_CHAR(v_new_stock)
+      );
+   END LOOP;
+
+  
+   COMMIT;
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+   DBMS_OUTPUT.PUT_LINE('Stock updated and transaction committed successfully.');
+
+EXCEPTION
+   WHEN OTHERS THEN
+      -- Roll back transaction in case of error
+      ROLLBACK;
+      DBMS_OUTPUT.PUT_LINE('Error encountered. Transaction rolled back.');
+      RAISE;
+END;
+/

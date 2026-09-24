@@ -1,0 +1,5 @@
+OPEN c_book; 
+CURSOR c_book (p_cat VARCHAR2 DEFAULT 'Database') IS
+   SELECT book_id, title FROM book WHERE category = p_cat;
+OPEN c_book;               
+OPEN c_book('Networking'); 

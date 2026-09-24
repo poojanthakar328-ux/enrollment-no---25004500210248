@@ -1,0 +1,59 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+   
+   CURSOR c_books_in_range (
+      p_min_price book.price%TYPE,
+      p_max_price book.price%TYPE
+   ) IS
+      SELECT book_id, title, category, price
+      FROM book
+      WHERE price BETWEEN p_min_price AND p_max_price
+      ORDER BY price ASC;
+
+   rec_book c_books_in_range%ROWTYPE;
+
+   -- Test inputs (300 and 700)
+   v_min_price book.price%TYPE := 300;
+   v_max_price book.price%TYPE := 700;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Books priced between ' || TO_CHAR(v_min_price, '999,990.00') || 
+                        ' and ' || TO_CHAR(v_max_price, '999,990.00') || ':');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('BOOK ID', 10) || 
+      RPAD('TITLE', 30) || 
+      RPAD('CATEGORY', 18) || 
+      'PRICE'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+
+   
+   OPEN c_books_in_range(v_min_price, v_max_price);
+   LOOP
+      FETCH c_books_in_range INTO rec_book;
+      EXIT WHEN c_books_in_range%NOTFOUND;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec_book.book_id), 10) ||
+         RPAD(rec_book.title, 30) ||
+         RPAD(rec_book.category, 18) ||
+         TO_CHAR(rec_book.price, '999,990.00')
+      );
+   END LOOP;
+
+      IF c_books_in_range%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('No books found within the given price range.');
+   END IF;
+
+   CLOSE c_books_in_range;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_books_in_range%ISOPEN THEN
+         CLOSE c_books_in_range;
+      END IF;
+      RAISE;
+END;
+/

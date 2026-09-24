@@ -1,0 +1,47 @@
+DECLARE
+  
+   CURSOR c_unreturned IS
+      SELECT issue_id, book_id, issue_date
+      FROM issue
+      WHERE return_date IS NULL;
+
+   rec_issue c_unreturned%ROWTYPE;
+
+BEGIN
+   OPEN c_unreturned;
+
+   
+   FETCH c_unreturned INTO rec_issue;
+
+  
+   IF c_unreturned%NOTFOUND THEN
+      DBMS_OUTPUT.PUT_LINE('All books returned');
+   ELSE
+            DBMS_OUTPUT.PUT_LINE(RPAD('-', 50, '-'));
+      DBMS_OUTPUT.PUT_LINE(RPAD('ISSUE ID', 12) || RPAD('BOOK ID', 12) || 'ISSUE DATE');
+      DBMS_OUTPUT.PUT_LINE(RPAD('-', 50, '-'));
+
+      
+      LOOP
+         DBMS_OUTPUT.PUT_LINE(
+            RPAD(TO_CHAR(rec_issue.issue_id), 12) ||
+            RPAD(TO_CHAR(rec_issue.book_id), 12) ||
+            TO_CHAR(rec_issue.issue_date, 'DD-MON-YYYY')
+         );
+
+         
+         FETCH c_unreturned INTO rec_issue;
+         EXIT WHEN c_unreturned%NOTFOUND;
+      END LOOP;
+   END IF;
+
+   CLOSE c_unreturned;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_unreturned%ISOPEN THEN
+         CLOSE c_unreturned;
+      END IF;
+      RAISE;
+END;
+/

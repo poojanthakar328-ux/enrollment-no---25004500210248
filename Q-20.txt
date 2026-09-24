@@ -1,0 +1,41 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+   
+   CURSOR c_publishers_by_country (p_country publisher.country%TYPE) IS
+      SELECT publisher_id, name, city, country
+      FROM publisher
+      WHERE UPPER(country) = UPPER(p_country);
+
+  
+   v_target_country publisher.country%TYPE := '&country';
+
+  
+   v_found BOOLEAN := FALSE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Publishers in: ' || v_target_country);
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+
+      FOR rec IN c_publishers_by_country(v_target_country) LOOP
+            v_found := TRUE;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec.publisher_id), 10) ||
+         RPAD(rec.name, 30) ||
+         rec.city
+      );
+   END LOOP;
+
+   
+   IF NOT v_found THEN
+      DBMS_OUTPUT.PUT_LINE('No publisher found in ' || v_target_country);
+   END IF;
+
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+
+EXCEPTION
+   WHEN OTHERS THEN
+      RAISE;
+END;
+/

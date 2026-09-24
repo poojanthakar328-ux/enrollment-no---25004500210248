@@ -1,0 +1,48 @@
+DECLARE
+   
+   CURSOR c_book_publisher IS
+      SELECT b.title,
+             p.name AS publisher_name,
+             p.country
+      FROM book b
+      JOIN publisher p ON b.publisher_id = p.publisher_id;
+
+   
+   rec_info c_book_publisher%ROWTYPE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('BOOK TITLE', 35) || 
+      RPAD('PUBLISHER NAME', 25) || 
+      'COUNTRY'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+
+   
+   OPEN c_book_publisher;
+   LOOP
+      FETCH c_book_publisher INTO rec_info;
+      EXIT WHEN c_book_publisher%NOTFOUND;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(rec_info.title, 35) ||
+         RPAD(rec_info.publisher_name, 25) ||
+         rec_info.country
+      );
+   END LOOP;
+
+      IF c_book_publisher%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('No records found.');
+   END IF;
+
+   CLOSE c_book_publisher;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_book_publisher%ISOPEN THEN
+         CLOSE c_book_publisher;
+      END IF;
+      RAISE;
+END;
+/

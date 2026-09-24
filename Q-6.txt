@@ -1,0 +1,53 @@
+DECLARE
+   
+   CURSOR c_books IS
+      SELECT book_id, title, price, stock
+      FROM book;
+
+   rec_book        c_books%ROWTYPE;
+   v_item_value    NUMBER(12, 2);
+   v_grand_total   NUMBER(12, 2) := 0; -- Initialized to 0 for accumulation
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('BOOK ID', 10) || 
+      RPAD('TITLE', 30) || 
+      RPAD('PRICE', 12) || 
+      RPAD('STOCK', 8) || 
+      'TOTAL VALUE'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+
+   OPEN c_books;
+   LOOP
+      FETCH c_books INTO rec_book;
+      EXIT WHEN c_books%NOTFOUND;
+
+            v_item_value := rec_book.price * rec_book.stock;
+
+           v_grand_total := v_grand_total + v_item_value;
+
+      
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec_book.book_id), 10) ||
+         RPAD(rec_book.title, 30) ||
+         RPAD(TO_CHAR(rec_book.price, '99,999.00'), 12) ||
+         RPAD(TO_CHAR(rec_book.stock), 8) ||
+         TO_CHAR(v_item_value, '999,999,999.00')
+      );
+   END LOOP;
+   CLOSE c_books;
+
+      DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+   DBMS_OUTPUT.PUT_LINE('GRAND TOTAL STOCK VALUE: ' || TO_CHAR(v_grand_total, '$999,999,999.00'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_books%ISOPEN THEN
+         CLOSE c_books;
+      END IF;
+      RAISE;
+END;
+/

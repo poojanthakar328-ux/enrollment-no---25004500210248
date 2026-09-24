@@ -1,0 +1,52 @@
+DECLARE
+   
+   CURSOR c_low_stock IS
+      SELECT book_id, title, stock, price
+      FROM book
+      WHERE stock < 5;
+
+   rec_book c_low_stock%ROWTYPE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('BOOK ID', 10) || 
+      RPAD('TITLE', 30) || 
+      RPAD('STOCK', 10) || 
+      RPAD('PRICE', 10) || 
+      'STATUS'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+
+   OPEN c_low_stock;
+   LOOP
+      FETCH c_low_stock INTO rec_book;
+      EXIT WHEN c_low_stock%NOTFOUND;
+
+            DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec_book.book_id), 10) ||
+         RPAD(rec_book.title, 30) ||
+         RPAD(TO_CHAR(rec_book.stock), 10) ||
+         RPAD(TO_CHAR(rec_book.price, '99,990.00'), 10) ||
+         'REORDER'
+      );
+   END LOOP;
+
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+
+     IF c_low_stock%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('All books have sufficient stock. No reorders needed.');
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('Total books needing reorder: ' || c_low_stock%ROWCOUNT);
+   END IF;
+
+   CLOSE c_low_stock;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_low_stock%ISOPEN THEN
+         CLOSE c_low_stock;
+      END IF;
+      RAISE;
+END;
+/

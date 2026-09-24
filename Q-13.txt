@@ -1,0 +1,50 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+      CURSOR c_books_by_category (p_category book.category%TYPE) IS
+      SELECT book_id, title, price, stock
+      FROM book
+      WHERE UPPER(category) = UPPER(p_category);
+
+   rec_book c_books_by_category%ROWTYPE;
+
+      v_target_category VARCHAR2(50) := '&category';
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Search Results for Category: ' || v_target_category);
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 65, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('BOOK ID', 10) || 
+      RPAD('TITLE', 30) || 
+      RPAD('PRICE', 12) || 
+      'STOCK'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 65, '-'));
+
+      OPEN c_books_by_category(v_target_category);
+   LOOP
+      FETCH c_books_by_category INTO rec_book;
+      EXIT WHEN c_books_by_category%NOTFOUND;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec_book.book_id), 10) ||
+         RPAD(rec_book.title, 30) ||
+         RPAD(TO_CHAR(rec_book.price, '99,990.00'), 12) ||
+         TO_CHAR(rec_book.stock)
+      );
+   END LOOP;
+
+      IF c_books_by_category%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('No books found in category: ' || v_target_category);
+   END IF;
+
+   CLOSE c_books_by_category;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_books_by_category%ISOPEN THEN
+         CLOSE c_books_by_category;
+      END IF;
+      RAISE;
+END;
+/

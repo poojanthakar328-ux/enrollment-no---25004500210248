@@ -1,0 +1,35 @@
+DECLARE
+      CURSOR c_members IS
+      SELECT name, course, semester
+      FROM member;
+
+   rec_member c_members%ROWTYPE;
+
+BEGIN
+   OPEN c_members;
+   LOOP
+      FETCH c_members INTO rec_member;
+      EXIT WHEN c_members%NOTFOUND;
+
+      
+      DBMS_OUTPUT.PUT_LINE(
+         c_members%ROWCOUNT || '. ' || 
+         UPPER(rec_member.name) || 
+         ' (' || rec_member.course || ' - Sem ' || rec_member.semester || ')'
+      );
+   END LOOP;
+
+      IF c_members%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('No members found.');
+   END IF;
+
+   CLOSE c_members;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_members%ISOPEN THEN
+         CLOSE c_members;
+      END IF;
+      RAISE;
+END;
+/

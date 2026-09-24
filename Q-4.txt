@@ -1,0 +1,41 @@
+DECLARE
+      CURSOR c_expensive_books IS
+      SELECT book_id, title, price
+      FROM book
+      WHERE price > 500;
+
+   rec_book c_expensive_books%ROWTYPE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 65, '-'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('S.NO', 8) || RPAD('BOOK ID', 10) || RPAD('TITLE', 35) || 'PRICE');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 65, '-'));
+
+   OPEN c_expensive_books;
+   LOOP
+      FETCH c_expensive_books INTO rec_book;
+      EXIT WHEN c_expensive_books%NOTFOUND;
+
+            DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(c_expensive_books%ROWCOUNT), 8) ||
+         RPAD(TO_CHAR(rec_book.book_id), 10) ||
+         RPAD(rec_book.title, 35) ||
+         TO_CHAR(rec_book.price, '999,999.00')
+      );
+   END LOOP;
+
+   
+   IF c_expensive_books%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('No books found with price greater than 500.');
+   END IF;
+
+   CLOSE c_expensive_books;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_expensive_books%ISOPEN THEN
+         CLOSE c_expensive_books;
+      END IF;
+      RAISE;
+END;
+/

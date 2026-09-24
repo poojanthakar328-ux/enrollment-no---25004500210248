@@ -1,0 +1,40 @@
+DECLARE
+     CURSOR c_top_books IS
+      SELECT book_id, title, price
+      FROM book
+      ORDER BY price DESC;
+
+   rec_book c_top_books%ROWTYPE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 55, '-'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('RANK', 8) || RPAD('BOOK ID', 10) || RPAD('TITLE', 25) || 'PRICE');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 55, '-'));
+
+   OPEN c_top_books;
+   LOOP
+      FETCH c_top_books INTO rec_book;
+      
+            EXIT WHEN c_top_books%NOTFOUND OR c_top_books%ROWCOUNT > 5;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(c_top_books%ROWCOUNT), 8) ||
+         RPAD(TO_CHAR(rec_book.book_id), 10) ||
+         RPAD(rec_book.title, 25) ||
+         TO_CHAR(rec_book.price, '999,999.00')
+      );
+
+      
+      EXIT WHEN c_top_books%ROWCOUNT = 5;
+   END LOOP;
+
+   CLOSE c_top_books;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_top_books%ISOPEN THEN
+         CLOSE c_top_books;
+      END IF;
+      RAISE;
+END;
+/

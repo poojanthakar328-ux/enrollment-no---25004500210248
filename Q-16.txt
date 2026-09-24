@@ -1,0 +1,57 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+   
+   CURSOR c_members_by_course_sem (
+      p_course   member.course%TYPE,
+      p_semester member.semester%TYPE
+   ) IS
+      SELECT member_id, name, course, semester, join_date
+      FROM member
+      WHERE UPPER(course) = UPPER(p_course)
+        AND semester = p_semester;
+
+   rec_member c_members_by_course_sem%ROWTYPE;
+
+   
+   v_target_course   member.course%TYPE   := '&course';
+   v_target_semester member.semester%TYPE := &semester;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Members in Course: ' || v_target_course || ' (Semester ' || v_target_semester || ')');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('MEMBER ID', 12) || 
+      RPAD('NAME', 25) || 
+      RPAD('COURSE/SEM', 18) || 
+      'JOIN DATE'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+
+      OPEN c_members_by_course_sem(v_target_course, v_target_semester);
+   LOOP
+      FETCH c_members_by_course_sem INTO rec_member;
+      EXIT WHEN c_members_by_course_sem%NOTFOUND;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec_member.member_id), 12) ||
+         RPAD(rec_member.name, 25) ||
+         RPAD(rec_member.course || ' - Sem ' || rec_member.semester, 18) ||
+         TO_CHAR(rec_member.join_date, 'DD-MON-YYYY')
+      );
+   END LOOP;
+
+      IF c_members_by_course_sem%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('No members found matching the specified course and semester.');
+   END IF;
+
+   CLOSE c_members_by_course_sem;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_members_by_course_sem%ISOPEN THEN
+         CLOSE c_members_by_course_sem;
+      END IF;
+      RAISE;
+END;
+/

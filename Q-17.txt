@@ -1,0 +1,45 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+     CURSOR c_books_by_cat (p_cat VARCHAR2 DEFAULT 'Database') IS
+      SELECT book_id, title, category, price
+      FROM book
+      WHERE UPPER(category) = UPPER(p_cat);
+
+BEGIN
+   ------------------------------------------------------------------
+   -- RUN 1: Open cursor WITHOUT passing an argument (Uses DEFAULT)
+   ------------------------------------------------------------------
+   DBMS_OUTPUT.PUT_LINE('=== RUN 1: CALLING WITHOUT ARGUMENT (DEFAULT: Database) ===');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('BOOK ID', 10) || RPAD('TITLE', 30) || 'PRICE');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+
+   FOR rec IN c_books_by_cat LOOP
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec.book_id), 10) ||
+         RPAD(rec.title, 30) ||
+         TO_CHAR(rec.price, '999,990.00')
+      );
+   END LOOP;
+
+   DBMS_OUTPUT.PUT_LINE(CHR(10)); -- Print a blank line separator
+
+   ------------------------------------------------------------------
+   -- RUN 2: Open cursor WITH EXPLICIT ARGUMENT ('Networking')
+   ------------------------------------------------------------------
+   DBMS_OUTPUT.PUT_LINE('=== RUN 2: CALLING WITH ARGUMENT ("Networking") ===');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('BOOK ID', 10) || RPAD('TITLE', 30) || 'PRICE');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+
+   FOR rec IN c_books_by_cat('Networking') LOOP
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec.book_id), 10) ||
+         RPAD(rec.title, 30) ||
+         TO_CHAR(rec.price, '999,990.00')
+      );
+   END LOOP;
+
+END;
+/

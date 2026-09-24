@@ -1,0 +1,63 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+   
+   CURSOR c_member_issue_history (p_member_id member.member_id%TYPE) IS
+      SELECT m.name AS member_name,
+             b.title AS book_title,
+             b.category,
+             i.issue_date,
+             i.return_date
+      FROM member m
+      JOIN issue i ON m.member_id = i.member_id
+      JOIN book b  ON i.book_id   = b.book_id
+      WHERE m.member_id = p_member_id
+      ORDER BY i.issue_date DESC;
+
+   rec_history c_member_issue_history%ROWTYPE;
+
+   
+   v_target_member_id member.member_id%TYPE := &member_id;
+
+BEGIN
+   OPEN c_member_issue_history(v_target_member_id);
+
+   
+   FETCH c_member_issue_history INTO rec_history;
+
+   IF c_member_issue_history%NOTFOUND THEN
+      DBMS_OUTPUT.PUT_LINE('No issue history found for Member ID: ' || v_target_member_id);
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('Issue History for Member: ' || rec_history.member_name || ' (ID: ' || v_target_member_id || ')');
+      DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD('BOOK TITLE', 30) || 
+         RPAD('CATEGORY', 18) || 
+         RPAD('ISSUE DATE', 15) || 
+         'RETURN DATE'
+      );
+      DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+
+           LOOP
+         DBMS_OUTPUT.PUT_LINE(
+            RPAD(rec_history.book_title, 30) ||
+            RPAD(rec_history.category, 18) ||
+            RPAD(TO_CHAR(rec_history.issue_date, 'DD-MON-YYYY'), 15) ||
+            NVL(TO_CHAR(rec_history.return_date, 'DD-MON-YYYY'), 'NOT RETURNED')
+         );
+
+         FETCH c_member_issue_history INTO rec_history;
+         EXIT WHEN c_member_issue_history%NOTFOUND;
+      END LOOP;
+   END IF;
+
+   CLOSE c_member_issue_history;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_member_issue_history%ISOPEN THEN
+         CLOSE c_member_issue_history;
+      END IF;
+      RAISE;
+END;
+/

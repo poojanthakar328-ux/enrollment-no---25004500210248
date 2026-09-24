@@ -1,0 +1,47 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+   
+   CURSOR c_books_by_publisher (p_pub_name VARCHAR2) IS
+      SELECT b.title, b.price, p.name AS publisher_name
+      FROM book b
+      JOIN publisher p ON b.publisher_id = p.publisher_id
+      WHERE UPPER(p.name) = UPPER(p_pub_name);
+
+   rec_book c_books_by_publisher%ROWTYPE;
+
+      v_input_publisher VARCHAR2(100) := '&publisher_name';
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Search Results for Publisher: ' || v_input_publisher);
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('BOOK TITLE', 40) || 'PRICE');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+
+   
+   OPEN c_books_by_publisher(v_input_publisher);
+   LOOP
+      FETCH c_books_by_publisher INTO rec_book;
+      EXIT WHEN c_books_by_publisher%NOTFOUND;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(rec_book.title, 40) ||
+         TO_CHAR(rec_book.price, '999,990.00')
+      );
+   END LOOP;
+
+  
+   IF c_books_by_publisher%ROWCOUNT = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('No books found for publisher: ' || v_input_publisher);
+   END IF;
+
+   CLOSE c_books_by_publisher;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_books_by_publisher%ISOPEN THEN
+         CLOSE c_books_by_publisher;
+      END IF;
+      RAISE;
+END;
+/

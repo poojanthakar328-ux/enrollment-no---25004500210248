@@ -1,0 +1,54 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+      CURSOR c_publishers IS
+      SELECT publisher_id, name, city
+      FROM publisher
+      ORDER BY name;
+
+   
+   CURSOR c_books_by_pub (p_pub_id publisher.publisher_id%TYPE) IS
+      SELECT book_id, title, price
+      FROM book
+      WHERE publisher_id = p_pub_id
+      ORDER BY title;
+
+   v_book_count NUMBER := 0;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('=', 70, '='));
+   DBMS_OUTPUT.PUT_LINE('PUBLISHER & BOOK CATALOGUE');
+   DBMS_OUTPUT.PUT_LINE(RPAD('=', 70, '='));
+
+      FOR rec_pub IN c_publishers LOOP
+      
+            DBMS_OUTPUT.PUT_LINE(CHR(10) || 'PUBLISHER: ' || UPPER(rec_pub.name) || ' (' || rec_pub.city || ')');
+      DBMS_OUTPUT.PUT_LINE('   ' || RPAD('-', 60, '-'));
+
+      v_book_count := 0;
+
+      
+      FOR rec_book IN c_books_by_pub(rec_pub.publisher_id) LOOP
+         v_book_count := v_book_count + 1;
+         
+                  DBMS_OUTPUT.PUT_LINE(
+            '   ' || 
+            RPAD(TO_CHAR(rec_book.book_id), 8) || 
+            RPAD(rec_book.title, 35) || 
+            TO_CHAR(rec_book.price, '$999,990.00')
+         );
+      END LOOP;
+
+            IF v_book_count = 0 THEN
+         DBMS_OUTPUT.PUT_LINE('   [ No books published by this publisher ]');
+      END IF;
+
+   END LOOP;
+
+   DBMS_OUTPUT.PUT_LINE(CHR(10) || RPAD('=', 70, '='));
+
+EXCEPTION
+   WHEN OTHERS THEN
+      RAISE;
+END;
+/

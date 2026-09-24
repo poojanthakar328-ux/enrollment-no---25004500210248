@@ -1,0 +1,42 @@
+DECLARE
+   
+   CURSOR c_books IS
+      SELECT book_id, title
+      FROM book;
+
+   rec_book c_books%ROWTYPE;
+
+BEGIN
+      IF c_books%ISOPEN THEN
+      DBMS_OUTPUT.PUT_LINE('Status before OPEN: Cursor already open');
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('Status before OPEN: Cursor is CLOSED. Opening now...');
+      OPEN c_books;
+   END IF;
+
+      IF c_books%ISOPEN THEN
+      DBMS_OUTPUT.PUT_LINE('Status after OPEN: Cursor already open');
+   END IF;
+
+      FETCH c_books INTO rec_book;
+   IF c_books%FOUND THEN
+      DBMS_OUTPUT.PUT_LINE('Sample fetched row: ID=' || rec_book.book_id || ', Title=' || rec_book.title);
+   END IF;
+
+   
+   CLOSE c_books;
+
+      IF c_books%ISOPEN THEN
+      DBMS_OUTPUT.PUT_LINE('Status after CLOSE: Cursor already open');
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('Status after CLOSE: %ISOPEN returned FALSE (Cursor is successfully closed)');
+   END IF;
+
+EXCEPTION
+   WHEN OTHERS THEN
+            IF c_books%ISOPEN THEN
+         CLOSE c_books;
+      END IF;
+      RAISE;
+END;
+/

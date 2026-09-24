@@ -1,0 +1,54 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+      CURSOR c_issues_by_month (p_month NUMBER) IS
+      SELECT i.issue_id,
+             i.book_id,
+             b.title,
+             i.member_id,
+             i.issue_date
+      FROM issue i
+      JOIN book b ON i.book_id = b.book_id
+      WHERE EXTRACT(MONTH FROM i.issue_date) = p_month
+        AND EXTRACT(YEAR FROM i.issue_date)  = 2026
+      ORDER BY i.issue_date ASC;
+
+   
+   v_target_month NUMBER := &month_number;
+   v_found        BOOLEAN := FALSE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Books Issued in Month ' || v_target_month || ' of 2026:');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('ISSUE ID', 10) ||
+      RPAD('BOOK ID', 10) ||
+      RPAD('TITLE', 30) ||
+      RPAD('MEMBER ID', 12) ||
+      'ISSUE DATE'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+
+      FOR rec IN c_issues_by_month(v_target_month) LOOP
+      v_found := TRUE;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec.issue_id), 10) ||
+         RPAD(TO_CHAR(rec.book_id), 10) ||
+         RPAD(rec.title, 30) ||
+         RPAD(TO_CHAR(rec.member_id), 12) ||
+         TO_CHAR(rec.issue_date, 'DD-MON-YYYY')
+      );
+   END LOOP;
+
+      IF NOT v_found THEN
+      DBMS_OUTPUT.PUT_LINE('No books were issued in month ' || v_target_month || ' of 2026.');
+   END IF;
+
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 75, '-'));
+
+EXCEPTION
+   WHEN OTHERS THEN
+      RAISE;
+END;
+/

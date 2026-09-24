@@ -1,0 +1,52 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+   
+   CURSOR c_members_by_initial (p_letter VARCHAR2) IS
+      SELECT member_id, name, course, semester, join_date
+      FROM member
+      WHERE UPPER(name) LIKE UPPER(p_letter) || '%'
+      ORDER BY name ASC;
+
+   
+   v_input_letter VARCHAR2(10) := '&initial_letter';
+   v_found        BOOLEAN := FALSE;
+
+BEGIN
+
+   v_input_letter := SUBSTR(TRIM(v_input_letter), 1, 1);
+
+   DBMS_OUTPUT.PUT_LINE('Members whose name starts with ''' || UPPER(v_input_letter) || ''':');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('MEMBER ID', 12) ||
+      RPAD('NAME', 25) ||
+      RPAD('COURSE', 15) ||
+      'JOIN DATE'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+
+   
+   FOR rec IN c_members_by_initial(v_input_letter) LOOP
+      v_found := TRUE;
+
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec.member_id), 12) ||
+         RPAD(rec.name, 25) ||
+         RPAD(rec.course, 15) ||
+         TO_CHAR(rec.join_date, 'DD-MON-YYYY')
+      );
+   END LOOP;
+
+   
+   IF NOT v_found THEN
+      DBMS_OUTPUT.PUT_LINE('No members found starting with letter ''' || UPPER(v_input_letter) || '''.');
+   END IF;
+
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 70, '-'));
+
+EXCEPTION
+   WHEN OTHERS THEN
+      RAISE;
+END;
+/

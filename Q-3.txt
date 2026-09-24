@@ -1,0 +1,35 @@
+DECLARE
+   
+   CURSOR c_publishers IS
+      SELECT name, city, country
+      FROM publisher;
+
+      rec_publisher c_publishers%ROWTYPE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('NAME', 25) || RPAD('CITY', 20) || 'COUNTRY');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 60, '-'));
+
+   
+   OPEN c_publishers;
+   LOOP
+      FETCH c_publishers INTO rec_publisher;
+      EXIT WHEN c_publishers%NOTFOUND;
+
+            DBMS_OUTPUT.PUT_LINE(
+         RPAD(rec_publisher.name, 25) || 
+         RPAD(rec_publisher.city, 20) || 
+         rec_publisher.country
+      );
+   END LOOP;
+   CLOSE c_publishers;
+
+EXCEPTION
+   WHEN OTHERS THEN
+      IF c_publishers%ISOPEN THEN
+         CLOSE c_publishers;
+      END IF;
+      RAISE;
+END;
+/

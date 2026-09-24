@@ -1,0 +1,72 @@
+SET SERVEROUTPUT ON;
+
+DECLARE
+      CURSOR c_overdue_issues (p_days NUMBER) IS
+      SELECT i.issue_id,
+             i.member_id,
+             b.title,
+             i.issue_date,
+             TRUNC(SYSDATE) - TRUNC(i.issue_date) AS days_outstanding
+      FROM issue i
+      JOIN book b ON i.book_id = b.book_id
+      WHERE i.return_date IS NULL
+        AND (TRUNC(SYSDATE) - TRUNC(i.issue_date)) > p_days
+      ORDER BY i.issue_date ASC;
+
+   
+   v_days_threshold NUMBER := &number_of_days;
+   
+   v_fine_rate    CONSTANT NUMBER := 2; -- Rs. 2 per overdue day
+   v_row_fine     NUMBER(10, 2) := 0;
+   v_total_fine   NUMBER(12, 2) := 0;
+   v_found        BOOLEAN := FALSE;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Unreturned Issues Older Than ' || v_days_threshold || ' Days:');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 80, '-'));
+   DBMS_OUTPUT.PUT_LINE(
+      RPAD('ISSUE ID', 10) ||
+      RPAD('MEMBER ID', 12) ||
+      RPAD('BOOK TITLE', 28) ||
+      RPAD('DAYS OUT', 12) ||
+      RPAD('OVERDUE', 10) ||
+      'FINE (RS.)'
+   );
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 80, '-'));
+
+   FOR rec IN c_overdue_issues(v_days_threshold) LOOP
+      v_found := TRUE;
+
+     
+      DECLARE
+         v_overdue_days NUMBER := rec.days_outstanding - v_days_threshold;
+      BEGIN
+                  v_row_fine := v_overdue_days * v_fine_rate;
+         v_total_fine := v_total_fine + v_row_fine;
+
+         DBMS_OUTPUT.PUT_LINE(
+            RPAD(TO_CHAR(rec.issue_id), 10) ||
+            RPAD(TO_CHAR(rec.member_id), 12) ||
+            RPAD(rec.title, 28) ||
+            RPAD(TO_CHAR(rec.days_outstanding), 12) ||
+            RPAD(TO_CHAR(v_overdue_days), 10) ||
+            TO_CHAR(v_row_fine, '999,990.00')
+         );
+      END;
+   END LOOP;
+
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 80, '-'));
+
+   IF NOT v_found THEN
+      DBMS_OUTPUT.PUT_LINE('No unreturned books found older than ' || v_days_threshold || ' days.');
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('TOTAL FINE PAYABLE: Rs. ' || TO_CHAR(v_total_fine, '999,999,990.00'));
+   END IF;
+
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 80, '-'));
+
+EXCEPTION
+   WHEN OTHERS THEN
+      RAISE;
+END;
+/

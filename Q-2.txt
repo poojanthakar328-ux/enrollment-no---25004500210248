@@ -1,0 +1,21 @@
+DECLARE
+   
+   CURSOR c_books IS
+      SELECT book_id, title, price
+      FROM book;
+
+BEGIN
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 50, '-'));
+   DBMS_OUTPUT.PUT_LINE(RPAD('BOOK ID', 10) || RPAD('TITLE', 30) || 'PRICE');
+   DBMS_OUTPUT.PUT_LINE(RPAD('-', 50, '-'));
+
+   
+   FOR rec IN c_books LOOP
+      DBMS_OUTPUT.PUT_LINE(
+         RPAD(TO_CHAR(rec.book_id), 10) || 
+         RPAD(rec.title, 30) || 
+         TO_CHAR(rec.price, '999,999.00')
+      );
+   END LOOP;
+END;
+/
